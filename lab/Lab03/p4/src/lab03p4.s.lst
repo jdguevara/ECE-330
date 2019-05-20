@@ -1,0 +1,59 @@
+   1              	# file: lab03p4.s
+   2              	
+   3              	.include "macros.inc"
+   1              	# file: macros.inc
+   2              	
+  34              	  .list
+   4              	
+   5              	  SET_TARGET
+   6              	
+   7              	  FUNCTION main,global
+   8              	
+   9 0000 F0B5     	    push {r4,r5,r6,r7,lr}
+  10              	    
+  11              	    Left_Shift = 6
+  12              	    Right_Rotate = 18
+  13              	
+  14 0002 0A4C     	    ldr   r4,=A
+  15 0004 2578     	    ldrb  r5,[r4,A-A]
+  16 0006 B4F80260 	    ldrh  r6,[r4,B-A]
+  17 000a D4F80470 	    ldr   r7,[r4,C-A]
+  18 000e 4FEA8515 	    lsl   r5,Left_Shift
+  19 0012 4FEAB545 	    ror   r5,Right_Rotate
+  20 0016 4FEA8616 	    lsl   r6,Left_Shift
+  21 001a 4FEAB646 	    ror   r6,Right_Rotate
+  22 001e 4FEA8717 	    lsl   r7,Left_Shift
+  23 0022 4FEAB747 	    ror   r7,Right_Rotate
+  24              	
+  25              	    all_done:
+  26              	    
+  27 0026 BDE8F040 	    pop {r4,r5,r6,r7,lr}
+  28              	
+  29 002a 7047     	    bx lr
+  30              	  
+  31 002c 00000000 	  ENDFUNC main
+  32              	
+  33              	  .data
+  34              	  
+  35 0000 09       	A: .byte  0x9
+  36 0001 00       	.align 1
+  37 0002 0900     	B: .short 0x9
+  38              	.align 2
+  39 0004 09000000 	C: .word  0x9
+  40              	 
+  41              	  .end
+DEFINED SYMBOLS
+                            *ABS*:00000001 ctxm4
+       src/lab03p4.s:7      .text:00000000 main
+       src/lab03p4.s:7      .text:00000000 $t
+       src/lab03p4.s:11     *ABS*:00000006 Left_Shift
+       src/lab03p4.s:12     *ABS*:00000012 Right_Rotate
+       src/lab03p4.s:35     .data:00000000 A
+       src/lab03p4.s:37     .data:00000002 B
+       src/lab03p4.s:39     .data:00000004 C
+       src/lab03p4.s:25     .text:00000026 all_done
+       src/lab03p4.s:31     .text:0000002c $d
+       src/lab03p4.s:36     .data:00000001 $d
+                   .debug_aranges:0000000c $d
+
+NO UNDEFINED SYMBOLS

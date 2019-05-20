@@ -1,0 +1,31 @@
+   1              	# file: lab06p1.s
+   2              	# This comment currently does nothing
+   3              	
+   4              	.include "macros.inc"
+   1              	# file: macros.inc
+   2              	
+  34              	  .list
+   5              	
+   6              	  SET_TARGET
+   7              	
+   8              	  .text
+   9              	
+  10              	  FUNCTION main,global
+  11              	
+  12              	    all_done:
+  13              	    
+  14 0000 7047     	    bx lr
+  15              	  
+  16              	  ENDFUNC main
+  17              	
+  18 0002 00BF     	  .data
+  19              	
+  20              	  .end
+DEFINED SYMBOLS
+                            *ABS*:00000001 ctxm4
+       src/lab06p1.s:10     .text:00000000 main
+       src/lab06p1.s:10     .text:00000000 $t
+       src/lab06p1.s:12     .text:00000000 all_done
+                   .debug_aranges:0000000c $d
+
+NO UNDEFINED SYMBOLS

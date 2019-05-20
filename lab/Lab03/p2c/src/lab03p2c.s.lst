@@ -1,0 +1,38 @@
+   1              	# file: lab03p2c.s
+   2              	
+   3              	.include "macros.inc"
+   1              	# file: macros.inc
+   2              	
+  34              	  .list
+   4              	
+   5              	  SET_TARGET
+   6              	
+   7              	  FUNCTION main,global
+   8              	
+   9 0000 F0B5     	    push {r4,r5,r6,r7,lr}
+  10              	
+  11 0002 054C     	    ldr  r4,=68
+  12 0004 054D     	    ldr  r5,=45
+  13 0006 6FEA0506 	    mvn  r6,r5 
+  14 000a 06F10106 	    add  r6,1
+  15 000e 04EB0602 	    add  r2,r4,r6
+  16              	
+  17              	    all_done:
+  18              	    
+  19 0012 BDE8F040 	    pop {r4,r5,r6,r7,lr}
+  20              	
+  21 0016 7047     	    bx lr
+  22              	  
+  23 0018 44000000 	  ENDFUNC main
+  23      2D000000 
+  24              	
+  25              	  .end
+DEFINED SYMBOLS
+                            *ABS*:00000001 ctxm4
+      src/lab03p2c.s:7      .text:00000000 main
+      src/lab03p2c.s:7      .text:00000000 $t
+      src/lab03p2c.s:17     .text:00000012 all_done
+      src/lab03p2c.s:23     .text:00000018 $d
+                   .debug_aranges:0000000c $d
+
+NO UNDEFINED SYMBOLS

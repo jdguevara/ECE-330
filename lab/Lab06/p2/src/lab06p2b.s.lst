@@ -1,0 +1,58 @@
+   1              	# file: lab06p2b.s
+   2              	
+   3              	.include "macros.inc"
+   1              	# file: macros.inc
+   2              	
+  34              	  .list
+   4              	
+   5              	  SET_TARGET
+   6              	
+   7              	  .text
+   8              	
+   9              	  .equ GPIOD_BASE,0x40020c00
+  10              	  .equ GPIO_MODER,0x00
+  11              	  .equ GPIO_ODR,0x14
+  12              	
+  13              	  FUNCTION main,global
+  14              	
+  15 0000 F0B5     	    push {r4,r5,r6,r7,lr}
+  16              	
+  17 0002 054C     	    ldr  r4,=GPIOD_BASE
+  18 0004 054A     	    ldr  r2,=(0b01<<(2*12))
+  19 0006 2260     	    str  r2,[r4,#GPIO_MODER]
+  20              	
+  21 0008 054D     	    ldr  r5,=#0
+  22 000a 064E     	    ldr  r6,=(1<<12)
+  23              	
+  24              	    loop:
+  25 000c 6661     	    str  r6,[r4,#GPIO_ODR]
+  26 000e 6561     	    str  r5,[r4,#GPIO_ODR]
+  27 0010 FCE7     	    b loop
+  28              	
+  29              	    all_done:
+  30              	    
+  31 0012 BDE8F040 	    pop {r4,r5,r6,r7,lr}
+  32              	
+  33 0016 7047     	    bx lr
+  34              	  
+  35 0018 000C0240 	  ENDFUNC main
+  35      00000001 
+  35      00000000 
+  35      00100000 
+  36              	
+  37              	  .data
+  38              	
+  39              	  .end
+DEFINED SYMBOLS
+                            *ABS*:00000001 ctxm4
+      src/lab06p2b.s:9      *ABS*:40020c00 GPIOD_BASE
+      src/lab06p2b.s:10     *ABS*:00000000 GPIO_MODER
+      src/lab06p2b.s:11     *ABS*:00000014 GPIO_ODR
+      src/lab06p2b.s:13     .text:00000000 main
+      src/lab06p2b.s:13     .text:00000000 $t
+      src/lab06p2b.s:24     .text:0000000c loop
+      src/lab06p2b.s:29     .text:00000012 all_done
+      src/lab06p2b.s:35     .text:00000018 $d
+                   .debug_aranges:0000000c $d
+
+NO UNDEFINED SYMBOLS

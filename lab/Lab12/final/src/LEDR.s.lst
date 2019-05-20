@@ -1,0 +1,383 @@
+   1              	# file: LEDR.s
+   2              	
+   3              	.include "macros.inc"
+   1              	# file: macros.inc
+   2              	
+  34              	  .list
+   4              	
+   5              	.include "src/gpio_regs.inc"
+   1              	# file: gpio_regs.inc
+   2              	
+   3              	# GPIO Port Base Addresses
+   4              	.equ GPIOA_BASE,0x40020000
+   5              	.equ GPIOB_BASE,0x40020400
+   6              	.equ GPIOC_BASE,0x40020800
+   7              	.equ GPIOD_BASE,0x40020c00
+   8              	.equ GPIOE_BASE,0x40021000
+   9              	
+  10              	# GPIO Register Offsets
+  11              	.equ GPIO_MODER,0x00
+  12              	.equ GPIO_OTYPER,0X04
+  13              	.equ GPIO_OSPEEDR,0x08
+  14              	.equ GPIO_PUPDR,0x0c
+  15              	.equ GPIO_IDR,0x10
+  16              	.equ GPIO_ODR,0x14
+  17              	.equ GPIO_BSRR,0x18
+  18              	.equ GPIO_LCKR,0x1c
+  19              	.equ GPIO_AFRL,0x20
+  20              	.equ GPIO_AFRH,0x24
+   6              	
+   7              	  SET_TARGET
+   8              	
+   9              	  .text
+  10              	
+  11              	  FUNCTION LEDR_Init,global
+  12              	
+  13              	    // Pushing lr onto the stack
+  14 0000 00B5     	    push {lr}
+  15              	
+  16 0002 FFF7FEFF 	    bl gpio_d_init
+  17              	
+  18              	    // Pop lr off the stack
+  19 0006 5DF804EB 	    pop {lr}
+  20              	
+  21              	    // Branch and exchange out of subroutine
+  22 000a 7047     	    bx lr
+  23              	  
+  24              	  ENDFUNC LEDR_Init
+  25              	
+  26              	  // Define our get function
+  27              	  FUNCTION LEDR_Put_A,global
+  28              	    
+  29              	    // Push lr onto the stack
+  30 000c 00B5     	    push {lr}
+  31              	
+  32              	    // Copy the current value we have in r0 to r1
+  33 000e 0146     	    mov r1,r0
+  34              	
+  35              	    // Call the gpio_d_get_current subroutine
+  36 0010 FFF7FEFF 	    bl gpio_d_get_current
+  37              	    
+  38              	    // Save the mask we desire in r2
+  39 0014 084A     	    ldr r2,=(~(~0<<1))
+  40              	
+  41              	    // Clear out garbage in our desired value
+  42 0016 02EA0101 	    and r1,r2,r1 
+  43              	
+  44              	    // Shift both mask and desired values by 8 bits to the left
+  45 001a 4FEA0121 	    lsl r1,r1,#8
+  46 001e 4FEA0222 	    lsl r2,r2,#8
+  47              	
+  48              	    // Create an inverse mask 
+  49 0022 6FEA0202 	    mvn r2,r2
+  50              	
+  51              	    // Clear out space in target register
+  52 0026 00EA0200 	    and r0,r0,r2
+  53              	
+  54              	    // Merge target register and desired value
+  55 002a 40EA0100 	    orr r0,r0,r1
+  56              	
+  57              	    // Call the gpio_d_put subroutine
+  58 002e FFF7FEFF 	    bl  gpio_d_put
+  59              	
+  60              	    // Pop lr off the stack
+  61 0032 5DF804EB 	    pop {lr}
+  62              	
+  63              	    // Branch and exchange out of the subroutine
+  64 0036 7047     	    bx  lr
+  65              	
+  66 0038 01000000 	  ENDFUNC LEDR_Put_A
+  67              	
+  68              	  // Define our get function
+  69              	  FUNCTION LEDR_Put_B,global
+  70              	    
+  71              	    // Push lr onto the stack
+  72 003c 00B5     	    push {lr}
+  73              	
+  74              	    // Copy our r0 value into r1 so we don't lose it (desired)
+  75 003e 0146     	    mov r1,r0
+  76              	
+  77              	    // Call the following subroutine to get the current GPIOD value
+  78 0040 FFF7FEFF 	    bl gpio_d_get_current
+  79              	    
+  80              	    // Load our 4-bit wide mask into r2
+  81 0044 084A     	    ldr r2,=(~(~0<<4))
+  82              	    
+  83              	    // Clear out garbage bits from desired value
+  84 0046 02EA0101 	    and r1,r2,r1 
+  85              	
+  86              	    // Shift both the desired and mask values over by the bits we want
+  87 004a 4FEA8101 	    lsl r1,r1,#2
+  88 004e 4FEA8202 	    lsl r2,r2,#2
+  89              	
+  90              	    // Make an inverse mask 
+  91 0052 6FEA0202 	    mvn r2,r2
+  92              	
+  93              	    // Clear out space in our target register
+  94 0056 00EA0200 	    and r0,r0,r2
+  95              	
+  96              	    // Merge values into the target register
+  97 005a 40EA0100 	    orr r0,r0,r1
+  98              	
+  99              	    // Put into desired GPIOD register using subroutine
+ 100 005e FFF7FEFF 	    bl  gpio_d_put
+ 101              	
+ 102              	    // Pop lr off the stack
+ 103 0062 5DF804EB 	    pop {lr}
+ 104              	
+ 105              	    // Branch and exchange out of the subroutine
+ 106 0066 7047     	    bx  lr
+ 107              	
+ 108 0068 0F000000 	  ENDFUNC LEDR_Put_B
+ 109              	  
+ 110              	
+ 111              	  // Define our put function for switches [14:12]
+ 112              	  FUNCTION led_put_index,global
+ 113              	    
+ 114              	    // Push lr onto the stack
+ 115 006c 00B5     	    push {lr}
+ 116              	
+ 117              	    // Copy our r0 value into r1 so we don't lose it (desired)
+ 118 006e 0146     	    mov r1,r0
+ 119              	
+ 120              	    // Call the following subroutine to get the current GPIOD value
+ 121 0070 FFF7FEFF 	    bl gpio_d_get_current
+ 122              	    
+ 123              	    // Load our 3-bit wide mask into r2
+ 124 0074 084A     	    ldr r2,=(~(~0<<3))
+ 125              	    
+ 126              	    // Clear out garbage bits from desired value
+ 127 0076 02EA0101 	    and r1,r2,r1 
+ 128              	
+ 129              	    // Shift both the desired and mask values over by the bits we want
+ 130 007a 4FEA0131 	    lsl r1,r1,#12
+ 131 007e 4FEA0232 	    lsl r2,r2,#12
+ 132              	
+ 133              	    // Make an inverse mask 
+ 134 0082 6FEA0202 	    mvn r2,r2
+ 135              	
+ 136              	    // Clear out space in our target register
+ 137 0086 00EA0200 	    and r0,r0,r2
+ 138              	
+ 139              	    // Merge values into the target register
+ 140 008a 40EA0100 	    orr r0,r0,r1
+ 141              	
+ 142              	    // Put into desired GPIOD register using subroutine
+ 143 008e FFF7FEFF 	    bl  gpio_d_put
+ 144              	
+ 145              	    // Pop lr off the stack
+ 146 0092 5DF804EB 	    pop {lr}
+ 147              	
+ 148              	    // Branch and exchange out of the subroutine
+ 149 0096 7047     	    bx  lr
+ 150              	
+ 151 0098 07000000 	  ENDFUNC led_put_index
+ 152              	  
+ 153              	  
+ 154              	  // Define our put function for switches [6:0]
+ 155              	  FUNCTION led_put_segments,global
+ 156              	    
+ 157              	    // Push lr onto the stack
+ 158 009c 00B5     	    push {lr}
+ 159              	
+ 160              	    // Copy our r0 value into r1 so we don't lose it (desired)
+ 161 009e 0146     	    mov r1,r0
+ 162              	
+ 163              	    // Call the following subroutine to get the current GPIOD value
+ 164 00a0 FFF7FEFF 	    bl gpio_d_get_current
+ 165              	    
+ 166              	    // Load our 7-bit wide mask into r2
+ 167 00a4 064A     	    ldr r2,=(~(~0<<7))
+ 168              	    
+ 169              	    // Clear out garbage bits from desired value
+ 170 00a6 02EA0101 	    and r1,r2,r1 
+ 171              	
+ 172              	    // We may not even need to shift for this section, but I'll keep just in case
+ 173              	    /* Shift both the desired and mask values over by the bits we want
+ 174              	    lsl r1,r1,#12
+ 175              	    lsl r2,r2,#12
+ 176              	    */
+ 177              	
+ 178              	    // Make an inverse mask 
+ 179 00aa 6FEA0202 	    mvn r2,r2
+ 180              	
+ 181              	    // Clear out space in our target register
+ 182 00ae 00EA0200 	    and r0,r0,r2
+ 183              	
+ 184              	    // Merge values into the target register
+ 185 00b2 40EA0100 	    orr r0,r0,r1
+ 186              	
+ 187              	    // Put into desired GPIOD register using subroutine
+ 188 00b6 FFF7FEFF 	    bl  gpio_d_put
+ 189              	
+ 190              	    // Pop lr off the stack
+ 191 00ba 5DF804EB 	    pop {lr}
+ 192              	
+ 193              	    // Branch and exchange out of the subroutine
+ 194 00be 7047     	    bx  lr
+ 195              	
+ 196 00c0 7F000000 	  ENDFUNC led_put_segments
+ 197              	
+ 198              	  // Define our put function for our latch 
+ 199              	  FUNCTION led_put_latch,global
+ 200              	    
+ 201              	    // Push lr onto the stack
+ 202 00c4 00B5     	    push {lr}
+ 203              	
+ 204              	    // Copy our r0 value into r1 so we don't lose it (desired)
+ 205 00c6 0146     	    mov r1,r0
+ 206              	
+ 207              	    // Call the following subroutine to get the current GPIOD value
+ 208 00c8 FFF7FEFF 	    bl gpio_d_get_current
+ 209              	    
+ 210              	    // Load our 1-bit wide mask into r2
+ 211 00cc 064A     	    ldr r2,=(~(~0<<1))
+ 212              	    
+ 213              	    // Clear out garbage bits from desired value
+ 214 00ce 02EA0101 	    and r1,r2,r1 
+ 215              	
+ 216              	    // Make an inverse mask 
+ 217 00d2 6FEA0202 	    mvn r2,r2
+ 218              	
+ 219              	    // Clear out space in our target register
+ 220 00d6 00EA0200 	    and r0,r0,r2
+ 221              	
+ 222              	    // Merge values into the target register
+ 223 00da 40EA0100 	    orr r0,r0,r1
+ 224              	
+ 225              	    // Put into desired GPIOD register using subroutine
+ 226 00de FFF7FEFF 	    bl  gpio_d_put
+ 227              	
+ 228              	    // Pop lr off the stack
+ 229 00e2 5DF804EB 	    pop {lr}
+ 230              	
+ 231              	    // Branch and exchange out of the subroutine
+ 232 00e6 7047     	    bx  lr
+ 233              	
+ 234 00e8 01000000 	  ENDFUNC led_put_latch
+ 235              	  
+ 236              	  // Define our put function for switches [0] to work servos
+ 237              	  FUNCTION led_put_LRservo,global
+ 238              	    
+ 239              	    // Push lr onto the stack
+ 240 00ec 00B5     	    push {lr}
+ 241              	
+ 242              	    // Copy our r0 value into r1 so we don't lose it (desired)
+ 243 00ee 0146     	    mov r1,r0
+ 244              	
+ 245              	    // Call the following subroutine to get the current GPIOD value
+ 246 00f0 FFF7FEFF 	    bl gpio_d_get_current
+ 247              	    
+ 248              	    // Load our 1-bit wide mask into r2
+ 249 00f4 064A     	    ldr r2,=(~(~0<<1))
+ 250              	    
+ 251              	    // Clear out garbage bits from desired value
+ 252 00f6 02EA0101 	    and r1,r2,r1 
+ 253              	
+ 254              	    // Make an inverse mask 
+ 255 00fa 6FEA0202 	    mvn r2,r2
+ 256              	
+ 257              	    // Clear out space in our target register
+ 258 00fe 00EA0200 	    and r0,r0,r2
+ 259              	
+ 260              	    // Merge values into the target register
+ 261 0102 40EA0100 	    orr r0,r0,r1
+ 262              	
+ 263              	    // Put into desired GPIOD register using subroutine
+ 264 0106 FFF7FEFF 	    bl  gpio_d_put
+ 265              	
+ 266              	    // Pop lr off the stack
+ 267 010a 5DF804EB 	    pop {lr}
+ 268              	
+ 269              	    // Branch and exchange out of the subroutine
+ 270 010e 7047     	    bx  lr
+ 271              	
+ 272 0110 01000000 	  ENDFUNC led_put_LRservo
+ 273              	
+ 274              	  // Define our put function for switches [1] to work Up/Down servos
+ 275              	    FUNCTION led_put_UDservo,global
+ 276              	
+ 277              	      // Push lr onto the stack
+ 278 0114 00B5     	      push {lr}
+ 279              	
+ 280              	      // Copy our r0 value into r1 so we don't lose it (desired)
+ 281 0116 0146     	      mov r1,r0
+ 282              	
+ 283              	      // Call the following subroutine to get the current GPIOD value
+ 284 0118 FFF7FEFF 	      bl gpio_d_get_current
+ 285              	
+ 286              	      // Load our 1-bit wide mask into r2
+ 287 011c 084A     	      ldr r2,=(~(~0<<1))
+ 288              	
+ 289              	      // Clear out garbage bits from desired value
+ 290 011e 02EA0101 	      and r1,r2,r1
+ 291              	
+ 292              	      // Shift both the desired and mask values over by the bits we want
+ 293 0122 4FEA4101 	      lsl r1,r1,#1
+ 294 0126 4FEA4202 	      lsl r2,r2,#1
+ 295              	
+ 296              	      // Make an inverse mask
+ 297 012a 6FEA0202 	      mvn r2,r2
+ 298              	
+ 299              	      // Clear out space in our target register
+ 300 012e 00EA0200 	      and r0,r0,r2
+ 301              	
+ 302              	      // Merge values into the target register
+ 303 0132 40EA0100 	      orr r0,r0,r1
+ 304              	
+ 305              	      // Put into desired GPIOD register using subroutine
+ 306 0136 FFF7FEFF 	      bl  gpio_d_put
+ 307              	
+ 308              	      // Pop lr off the stack
+ 309 013a 5DF804EB 	      pop {lr}
+ 310              	
+ 311              	      // Branch and exchange out of the subroutine
+ 312 013e 7047     	      bx  lr
+ 313              	
+ 314 0140 01000000 	    ENDFUNC led_put_UDservo
+ 315              	  .end
+DEFINED SYMBOLS
+                            *ABS*:00000001 ctxm4
+ ./src/gpio_regs.inc:4      *ABS*:40020000 GPIOA_BASE
+ ./src/gpio_regs.inc:5      *ABS*:40020400 GPIOB_BASE
+ ./src/gpio_regs.inc:6      *ABS*:40020800 GPIOC_BASE
+ ./src/gpio_regs.inc:7      *ABS*:40020c00 GPIOD_BASE
+ ./src/gpio_regs.inc:8      *ABS*:40021000 GPIOE_BASE
+ ./src/gpio_regs.inc:11     *ABS*:00000000 GPIO_MODER
+ ./src/gpio_regs.inc:12     *ABS*:00000004 GPIO_OTYPER
+ ./src/gpio_regs.inc:13     *ABS*:00000008 GPIO_OSPEEDR
+ ./src/gpio_regs.inc:14     *ABS*:0000000c GPIO_PUPDR
+ ./src/gpio_regs.inc:15     *ABS*:00000010 GPIO_IDR
+ ./src/gpio_regs.inc:16     *ABS*:00000014 GPIO_ODR
+ ./src/gpio_regs.inc:17     *ABS*:00000018 GPIO_BSRR
+ ./src/gpio_regs.inc:18     *ABS*:0000001c GPIO_LCKR
+ ./src/gpio_regs.inc:19     *ABS*:00000020 GPIO_AFRL
+ ./src/gpio_regs.inc:20     *ABS*:00000024 GPIO_AFRH
+          src/LEDR.s:11     .text:00000000 LEDR_Init
+          src/LEDR.s:11     .text:00000000 $t
+          src/LEDR.s:27     .text:0000000c LEDR_Put_A
+          src/LEDR.s:66     .text:00000038 $d
+          src/LEDR.s:69     .text:0000003c LEDR_Put_B
+          src/LEDR.s:69     .text:0000003c $t
+          src/LEDR.s:108    .text:00000068 $d
+          src/LEDR.s:112    .text:0000006c led_put_index
+          src/LEDR.s:112    .text:0000006c $t
+          src/LEDR.s:151    .text:00000098 $d
+          src/LEDR.s:155    .text:0000009c led_put_segments
+          src/LEDR.s:155    .text:0000009c $t
+          src/LEDR.s:196    .text:000000c0 $d
+          src/LEDR.s:199    .text:000000c4 led_put_latch
+          src/LEDR.s:199    .text:000000c4 $t
+          src/LEDR.s:234    .text:000000e8 $d
+          src/LEDR.s:237    .text:000000ec led_put_LRservo
+          src/LEDR.s:237    .text:000000ec $t
+          src/LEDR.s:272    .text:00000110 $d
+          src/LEDR.s:275    .text:00000114 led_put_UDservo
+          src/LEDR.s:275    .text:00000114 $t
+          src/LEDR.s:314    .text:00000140 $d
+                   .debug_aranges:0000000c $d
+
+UNDEFINED SYMBOLS
+gpio_d_init
+gpio_d_get_current
+gpio_d_put

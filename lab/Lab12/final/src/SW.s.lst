@@ -1,0 +1,360 @@
+   1              	# file: SW.s
+   2              	
+   3              	.include "macros.inc"
+   1              	# file: macros.inc
+   2              	
+  34              	  .list
+   4              	
+   5              	.include "src/gpio_regs.inc"
+   1              	# file: gpio_regs.inc
+   2              	
+   3              	# GPIO Port Base Addresses
+   4              	.equ GPIOA_BASE,0x40020000
+   5              	.equ GPIOB_BASE,0x40020400
+   6              	.equ GPIOC_BASE,0x40020800
+   7              	.equ GPIOD_BASE,0x40020c00
+   8              	.equ GPIOE_BASE,0x40021000
+   9              	
+  10              	# GPIO Register Offsets
+  11              	.equ GPIO_MODER,0x00
+  12              	.equ GPIO_OTYPER,0X04
+  13              	.equ GPIO_OSPEEDR,0x08
+  14              	.equ GPIO_PUPDR,0x0c
+  15              	.equ GPIO_IDR,0x10
+  16              	.equ GPIO_ODR,0x14
+  17              	.equ GPIO_BSRR,0x18
+  18              	.equ GPIO_LCKR,0x1c
+  19              	.equ GPIO_AFRL,0x20
+  20              	.equ GPIO_AFRH,0x24
+   6              	
+   7              	  SET_TARGET
+   8              	
+   9              	  .text
+  10              	
+  11              	  FUNCTION SW_Init,global
+  12              	
+  13              	    // Pushing lr onto the stack
+  14 0000 00B5     	    push {lr}
+  15              	
+  16 0002 FFF7FEFF 	    bl gpio_c_init
+  17              	
+  18              	    // Pop lr off the stack
+  19 0006 5DF804EB 	    pop {lr}
+  20              	
+  21 000a 7047     	    bx lr
+  22              	  
+  23              	  ENDFUNC SW_Init
+  24              	
+  25              	
+  26              	  // Define our get function
+  27              	  FUNCTION SW_Get_A,global
+  28              	
+  29              	    // Push lr onto the stack
+  30 000c 00B5     	    push {lr}
+  31              	
+  32              	    // Call the gpio_c_get subroutine
+  33 000e FFF7FEFF 	    bl gpio_c_get
+  34              	
+  35              	    // Shift value in r0 by 3 bits
+  36 0012 4FEAD000 	    lsr r0,#3
+  37              	
+  38              	    // Load r1 with the following normalized mask
+  39 0016 0349     	    ldr r1,=#(~(~0<<1))
+  40              	
+  41              	    // Clear any garbage numbers from r0
+  42 0018 00EA0100 	    and r0,r1
+  43              	
+  44              	    // Pop lr off the stack
+  45 001c 5DF804EB 	    pop {lr}
+  46              	
+  47              	    // Branch and exchange out of the subroutine
+  48 0020 7047     	    bx  lr
+  49              	
+  50 0022 00000100 	  ENDFUNC SW_Get_A
+  50      0000
+  51              	
+  52              	
+  53              	  // Define our get function for switches [11:8]
+  54              	  FUNCTION SW_Get_B,global
+  55              	
+  56              	    // Push lr onto the stack
+  57 0028 00B5     	    push {lr}
+  58              	
+  59              	    // Call the gpio_c_get subroutine
+  60 002a FFF7FEFF 	    bl gpio_c_get
+  61              	
+  62              	    // Shit the value in r0 8 bits to the right
+  63 002e 4FEA1020 	    lsr r0,#8
+  64              	
+  65              	    // Make a 4-bit wide mask and store in r1
+  66 0032 0349     	    ldr r1,=#(~(~0<<4))
+  67              	
+  68              	    // Clear any unnecessary numbers from r0
+  69 0034 00EA0100 	    and r0,r1
+  70              	
+  71              	    // Pop lr off the stack
+  72 0038 5DF804EB 	    pop {lr}
+  73              	
+  74              	    // Branch and exchange out of the subroutine
+  75 003c 7047     	    bx  lr
+  76              	
+  77 003e 00000F00 	  ENDFUNC SW_Get_B
+  77      0000
+  78              	 
+  79              	
+  80              	  /* 
+  81              	     Define our get function for switches [14:12]
+  82              	     and puts them into r0 (normalized).
+  83              	  */
+  84              	  FUNCTION sw_get_index,global
+  85              	
+  86              	    // Push lr onto the stack
+  87 0044 00B5     	    push {lr}
+  88              	
+  89              	    // Call the gpio_c_get subroutine
+  90 0046 FFF7FEFF 	    bl gpio_c_get
+  91              	
+  92              	    // Shift the value in r0 12 bits to the right
+  93 004a 4FEA1030 	    lsr r0,#12
+  94              	
+  95              	    // Make a 3-bit wide mask and store in r1
+  96 004e 0349     	    ldr r1,=#(~(~0<<3))
+  97              	
+  98              	    // Clear any unnecessary numbers from r0
+  99 0050 00EA0100 	    and r0,r1
+ 100              	
+ 101              	    // Pop lr off the stack
+ 102 0054 5DF804EB 	    pop {lr}
+ 103              	
+ 104              	    // Branch and exchange out of the subroutine
+ 105 0058 7047     	    bx  lr
+ 106              	
+ 107 005a 00000700 	  ENDFUNC sw_get_index
+ 107      0000
+ 108              	 
+ 109              	
+ 110              	  // TODO: Modify this to use another set of switches for the 
+ 111              	  //       seven segment display. Since [1:0] will be used for
+ 112              	  //       the servos
+ 113              	  /* 
+ 114              	     Define our get function for switches [6:0]
+ 115              	     and puts them into r0 (normalized).
+ 116              	  */
+ 117              	  FUNCTION sw_get_segments,global
+ 118              	
+ 119              	    // Push lr onto the stack
+ 120 0060 00B5     	    push {lr}
+ 121              	
+ 122              	    // Call the gpio_c_get subroutine
+ 123 0062 FFF7FEFF 	    bl gpio_c_get
+ 124              	
+ 125              	    // Make a 7-bit wide mask and store in r1
+ 126 0066 0349     	    ldr r1,=#(~(~0<<7))
+ 127              	
+ 128              	    // Clear any unnecessary numbers from r0
+ 129 0068 00EA0100 	    and r0,r1
+ 130              	
+ 131              	    // Pop lr off the stack
+ 132 006c 5DF804EB 	    pop {lr}
+ 133              	
+ 134              	    // Branch and exchange out of the subroutine
+ 135 0070 7047     	    bx  lr
+ 136              	
+ 137 0072 00007F00 	  ENDFUNC sw_get_segments
+ 137      0000
+ 138              	 
+ 139              	
+ 140              	  /* 
+ 141              	     Define our get function for switches [10:7]
+ 142              	     and puts them into r0 (normalized).
+ 143              	  */
+ 144              	  FUNCTION sw_get_hex,global
+ 145              	
+ 146              	    // Push lr onto the stack
+ 147 0078 00B5     	    push {lr}
+ 148              	
+ 149              	    // Call the gpio_c_get subroutine
+ 150 007a FFF7FEFF 	    bl gpio_c_get
+ 151              	
+ 152              	    // Shift the value in r0 7 bits to the right
+ 153 007e 4FEAD010 	    lsr r0,#7
+ 154              	    
+ 155              	    // Make a 4-bit wide mask and store in r1
+ 156 0082 0349     	    ldr r1,=#(~(~0<<4))
+ 157              	
+ 158              	    // Clear any unnecessary numbers from r0
+ 159 0084 00EA0100 	    and r0,r1
+ 160              	
+ 161              	    // Pop lr off the stack
+ 162 0088 5DF804EB 	    pop {lr}
+ 163              	
+ 164              	    // Branch and exchange out of the subroutine
+ 165 008c 7047     	    bx  lr
+ 166              	
+ 167 008e 00000F00 	  ENDFUNC sw_get_hex
+ 167      0000
+ 168              	  
+ 169              	  /* 
+ 170              	     Define our get function for switch [0] our latch
+ 171              	     and puts them into r0 (normalized).
+ 172              	  */
+ 173              	  FUNCTION get_latch,global
+ 174              	
+ 175              	    // Push lr onto the stack
+ 176 0094 00B5     	    push {lr}
+ 177              	
+ 178              	    // Call the gpio_c_get subroutine
+ 179 0096 FFF7FEFF 	    bl gpio_c_get
+ 180              	
+ 181              	    // Make a 1-bit wide mask and store in r1
+ 182 009a 0349     	    ldr r1,=#(~(~0<<1))
+ 183              	
+ 184              	    // Clear any unnecessary numbers from r0
+ 185 009c 00EA0100 	    and r0,r1
+ 186              	
+ 187              	    // Pop lr off the stack
+ 188 00a0 5DF804EB 	    pop {lr}
+ 189              	
+ 190              	    // Branch and exchange out of the subroutine
+ 191 00a4 7047     	    bx  lr
+ 192              	
+ 193 00a6 00000100 	  ENDFUNC sw_get_segments
+ 193      0000
+ 194              	  
+ 195              	  /* 
+ 196              	     Define our get function for switch[0] (L/R servo control)
+ 197              	     for our servos and puts them into r0 (normalized).
+ 198              	  */
+ 199              	  FUNCTION sw_get_LRservo,global
+ 200              	
+ 201              	    // Push lr onto the stack
+ 202 00ac 00B5     	    push {lr}
+ 203              	
+ 204              	    // Call the gpio_c_get subroutine
+ 205 00ae FFF7FEFF 	    bl gpio_c_get
+ 206              	
+ 207              	    // Make a 1-bit wide mask and store in r1
+ 208 00b2 0349     	    ldr r1,=#(~(~0<<1))
+ 209              	
+ 210              	    // Clear any unnecessary numbers from r0
+ 211 00b4 00EA0100 	    and r0,r1
+ 212              	
+ 213              	    // Pop lr off the stack
+ 214 00b8 5DF804EB 	    pop {lr}
+ 215              	
+ 216              	    // Branch and exchange out of the subroutine
+ 217 00bc 7047     	    bx  lr
+ 218              	
+ 219 00be 00000100 	  ENDFUNC sw_get_LRservo
+ 219      0000
+ 220              	
+ 221              	  /*
+ 222              	       Define our get function for switch[1] (U/D servo control)
+ 223              	       for our servos and puts them into r0 (normalized).
+ 224              	    */
+ 225              	    FUNCTION sw_get_UDservo,global
+ 226              	
+ 227              	      // Push lr onto the stack
+ 228 00c4 00B5     	      push {lr}
+ 229              	
+ 230              	      // Call the gpio_c_get subroutine
+ 231 00c6 FFF7FEFF 	      bl gpio_c_get
+ 232              	
+ 233              	      // Shift the value in r0 1 bits to the right
+ 234 00ca 4FEA5000 	      lsr r0,#1
+ 235              	
+ 236              	      // Make a 1-bit wide mask and store in r1
+ 237 00ce 0349     	      ldr r1,=#(~(~0<<1))
+ 238              	
+ 239              	      // Clear any unnecessary numbers from r0
+ 240 00d0 00EA0100 	      and r0,r1
+ 241              	
+ 242              	      // Pop lr off the stack
+ 243 00d4 5DF804EB 	      pop {lr}
+ 244              	
+ 245              	      // Branch and exchange out of the subroutine
+ 246 00d8 7047     	      bx  lr
+ 247              	
+ 248 00da 00000100 	    ENDFUNC sw_get_UDservo
+ 248      0000
+ 249              	
+ 250              	    /*
+ 251              	       Function for detecting automatic mode based
+ 252              	       on switch value from switch[3]
+ 253              	    */
+ 254              	    FUNCTION automatic,global
+ 255              	
+ 256              	      // Push lr onto the stack
+ 257 00e0 00B5     	      push {lr}
+ 258              	
+ 259              	      // Call the gpio_c_get subroutine
+ 260 00e2 FFF7FEFF 	      bl gpio_c_get
+ 261              	
+ 262              	      // Shift the value in r0 1 bits to the right
+ 263 00e6 4FEAD000 	      lsr r0,#3
+ 264              	
+ 265              	      // Make a 1-bit wide mask and store in r1
+ 266 00ea 0349     	      ldr r1,=#(~(~0<<1))
+ 267              	
+ 268              	      // Clear any unnecessary numbers from r0
+ 269 00ec 00EA0100 	      and r0,r1
+ 270              	
+ 271              	      // Pop lr off the stack
+ 272 00f0 5DF804EB 	      pop {lr}
+ 273              	
+ 274              	      // Branch and exchange out of the subroutine
+ 275 00f4 7047     	      bx  lr
+ 276              	
+ 277 00f6 00000100 	    ENDFUNC automatic
+ 277      0000
+ 278              	  .end
+DEFINED SYMBOLS
+                            *ABS*:00000001 ctxm4
+ ./src/gpio_regs.inc:4      *ABS*:40020000 GPIOA_BASE
+ ./src/gpio_regs.inc:5      *ABS*:40020400 GPIOB_BASE
+ ./src/gpio_regs.inc:6      *ABS*:40020800 GPIOC_BASE
+ ./src/gpio_regs.inc:7      *ABS*:40020c00 GPIOD_BASE
+ ./src/gpio_regs.inc:8      *ABS*:40021000 GPIOE_BASE
+ ./src/gpio_regs.inc:11     *ABS*:00000000 GPIO_MODER
+ ./src/gpio_regs.inc:12     *ABS*:00000004 GPIO_OTYPER
+ ./src/gpio_regs.inc:13     *ABS*:00000008 GPIO_OSPEEDR
+ ./src/gpio_regs.inc:14     *ABS*:0000000c GPIO_PUPDR
+ ./src/gpio_regs.inc:15     *ABS*:00000010 GPIO_IDR
+ ./src/gpio_regs.inc:16     *ABS*:00000014 GPIO_ODR
+ ./src/gpio_regs.inc:17     *ABS*:00000018 GPIO_BSRR
+ ./src/gpio_regs.inc:18     *ABS*:0000001c GPIO_LCKR
+ ./src/gpio_regs.inc:19     *ABS*:00000020 GPIO_AFRL
+ ./src/gpio_regs.inc:20     *ABS*:00000024 GPIO_AFRH
+            src/SW.s:11     .text:00000000 SW_Init
+            src/SW.s:11     .text:00000000 $t
+            src/SW.s:27     .text:0000000c SW_Get_A
+            src/SW.s:50     .text:00000022 $d
+            src/SW.s:54     .text:00000028 SW_Get_B
+            src/SW.s:54     .text:00000028 $t
+            src/SW.s:77     .text:0000003e $d
+            src/SW.s:84     .text:00000044 sw_get_index
+            src/SW.s:84     .text:00000044 $t
+            src/SW.s:107    .text:0000005a $d
+            src/SW.s:117    .text:00000060 sw_get_segments
+            src/SW.s:117    .text:00000060 $t
+            src/SW.s:137    .text:00000072 $d
+            src/SW.s:144    .text:00000078 sw_get_hex
+            src/SW.s:144    .text:00000078 $t
+            src/SW.s:167    .text:0000008e $d
+            src/SW.s:173    .text:00000094 get_latch
+            src/SW.s:173    .text:00000094 $t
+            src/SW.s:193    .text:000000a6 $d
+            src/SW.s:199    .text:000000ac sw_get_LRservo
+            src/SW.s:199    .text:000000ac $t
+            src/SW.s:219    .text:000000be $d
+            src/SW.s:225    .text:000000c4 sw_get_UDservo
+            src/SW.s:225    .text:000000c4 $t
+            src/SW.s:248    .text:000000da $d
+            src/SW.s:254    .text:000000e0 automatic
+            src/SW.s:254    .text:000000e0 $t
+            src/SW.s:277    .text:000000f6 $d
+                   .debug_aranges:0000000c $d
+
+UNDEFINED SYMBOLS
+gpio_c_init
+gpio_c_get

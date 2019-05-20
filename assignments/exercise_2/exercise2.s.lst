@@ -1,0 +1,60 @@
+   1              	# file: exercise2.s - Author: Jaime Guevara
+   2              	 
+   3              	/* Final Values for Variables:
+   4              	      A: 0x0c
+   5              	      B: 0x8765
+   6              	      C: 0xb5901579
+   7              	*/
+   8              	   .title Exercise_2
+   9              	
+  10              	   .text
+  11              	
+  12              	   .global main
+  13              	main: 
+  14              	
+  15 0000 0549     	    ldr  r1,=DAT            //Establish addressability to data section
+  16              	
+  17 0002 0A79     	    ldrb  r2,[r1,#A-DAT]    //Data Access: Load byte data from label A location
+  18 0004 CB88     	    ldrh  r3,[r1,#B-DAT]    //Data Access: Load half word data from label B location
+  19 0006 8C68     	    ldr   r4,[r1,#C-DAT]    //Data Access: Load word data from label C location
+  20              	
+  21 0008 5B02     	    lsl   r3,#9             //Logically shift left the half-word data 
+  22 000a 8B60     	    str   r3,[r1,#C-DAT]    //Re-store in memory
+  23              	
+  24 000c A409     	    lsr   r4,#6             //Logically shift right the word data 
+  25 000e 8C60     	    str   r4,[r1,#C-DAT]    //Re=store in memory
+  26              	
+  27 0010 E518     	    add   r5,r4,r3          //Add the two shifted variables together, store in new register
+  28 0012 D541     	    ror   r5,r2             //Rotate r5 value by the number of binary digits in byte A
+  29 0014 8D60     	    str   r5,[r1,#C-DAT]    //Store final result in word-sized variable
+  30              	
+  31 0016 FEE7     	    b    .                  //Branch forever to this same location count
+  32              	  
+  33              	   .data
+  34              	
+  35              	DAT:
+  36 0000 BBBBBBBB 	   .word  0xbbbbbbbb        //Begin Coremark
+  37              	
+  38 0004 0C       	A: .byte  12                //Define byte A data
+  39 0005 00       	   .align 1                 //Align data properly for halfword/short
+  40 0006 6587     	B: .short 0x8765            //Define short B data
+  41              	   .align 2                 //Align data properly for word
+  42 0008 78563412 	C: .word  0x12345678        //Define word C data 
+  43              	
+  44              	
+  45 000c EEEEEEEE 	   .word 0xeeeeeeee         //End Coremark
+  46              	   
+  47              	   .end
+DEFINED SYMBOLS
+                            *ABS*:00000001 ctxm3
+     src/exercise2.s:13     .text:00000000 main
+     src/exercise2.s:35     .data:00000000 DAT
+     src/exercise2.s:15     .text:00000000 $t
+     src/exercise2.s:38     .data:00000004 A
+     src/exercise2.s:40     .data:00000006 B
+     src/exercise2.s:42     .data:00000008 C
+     src/exercise2.s:39     .data:00000005 $d
+     src/exercise2.s:33     .text:00000018 $d
+                   .debug_aranges:0000000c $d
+
+NO UNDEFINED SYMBOLS

@@ -1,0 +1,80 @@
+   1              	# file: lab06p3.s
+   2              	
+   3              	.include "macros.inc"
+   1              	# file: macros.inc
+   2              	
+  34              	  .list
+   4              	
+   5              	  SET_TARGET
+   6              	
+   7              	  .text
+   8              	
+   9              	  .equ GPIOD_BASE,0x40020c00
+  10              	  .equ GPIO_MODER,0x00
+  11              	  .equ GPIO_ODR,0x14
+  12              	
+  13              	  FUNCTION main,global
+  14              	
+  15 0000 F0B5     	    push {r4,r5,r6,r7,lr}
+  16              	
+  17 0002 084C     	    ldr  r4,=GPIOD_BASE
+  18 0004 084A     	    ldr  r2,=(0b01<<(2*14))
+  19 0006 2260     	    str  r2,[r4,#GPIO_MODER] 
+  20 0008 084D     	    ldr  r5,=#0
+  21 000a 094E     	    ldr  r6,=(1<<14)
+  22              	
+  23              	    loop:
+  24 000c 6661     	    str  r6,[r4,#GPIO_ODR]
+  25 000e 0948     	    ldr r0,=#1000000
+  26 0010 00F012F8 	    bl delay
+  27              	
+  28 0014 6561     	    str  r5,[r4,#GPIO_ODR]
+  29 0016 0748     	    ldr  r0,=#1000000
+  30 0018 00F00EF8 	    bl delay
+  31 001c F6E7     	    b loop
+  32              	
+  33              	    all_done:
+  34              	    
+  35 001e BDE8F040 	    pop {r4,r5,r6,r7,lr}
+  36              	
+  37 0022 7047     	    bx lr
+  38              	  
+  39 0024 000C0240 	  ENDFUNC main
+  39      00000010 
+  39      00000000 
+  39      00400000 
+  39      40420F00 
+  40              	  
+  41              	  FUNCTION delay
+  42              	
+  43 0038 4FF00003 	    mov r3,#0
+  44              	
+  45              	    delay_loop:
+  46              	
+  47 003c A0F10100 	        sub r0,#1
+  48 0040 9842     	        cmp r0,r3
+  49 0042 FBDA     	        bge delay_loop 
+  50              	
+  51 0044 7047     	    bx lr
+  52              	   
+  53              	  ENDFUNC delay
+  54              	  
+  55 0046 00BF     	  .data
+  56              	
+  57              	  .end
+DEFINED SYMBOLS
+                            *ABS*:00000001 ctxm4
+       src/lab06p3.s:9      *ABS*:40020c00 GPIOD_BASE
+       src/lab06p3.s:10     *ABS*:00000000 GPIO_MODER
+       src/lab06p3.s:11     *ABS*:00000014 GPIO_ODR
+       src/lab06p3.s:13     .text:00000000 main
+       src/lab06p3.s:13     .text:00000000 $t
+       src/lab06p3.s:23     .text:0000000c loop
+       src/lab06p3.s:41     .text:00000038 delay
+       src/lab06p3.s:33     .text:0000001e all_done
+       src/lab06p3.s:39     .text:00000024 $d
+       src/lab06p3.s:41     .text:00000038 $t
+       src/lab06p3.s:45     .text:0000003c delay_loop
+                   .debug_aranges:0000000c $d
+
+NO UNDEFINED SYMBOLS

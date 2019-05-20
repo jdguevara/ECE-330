@@ -1,0 +1,109 @@
+   1              	# file: gpio_c.s
+   2              	
+   3              	.include "macros.inc"
+   1              	# file: macros.inc
+   2              	
+  34              	  .list
+   4              	
+   5              	.include "src/gpio_regs.inc"
+   1              	# file: gpio_regs.inc
+   2              	
+   3              	# GPIO Port Base Addresses
+   4              	.equ GPIOA_BASE,0x40020000
+   5              	.equ GPIOB_BASE,0x40020400
+   6              	.equ GPIOC_BASE,0x40020800
+   7              	.equ GPIOD_BASE,0x40020c00
+   8              	.equ GPIOE_BASE,0x40021000
+   9              	
+  10              	# GPIO Register Offsets
+  11              	.equ GPIO_MODER,0x00
+  12              	.equ GPIO_OTYPER,0X04
+  13              	.equ GPIO_OSPEEDR,0x08
+  14              	.equ GPIO_PUPDR,0x0c
+  15              	.equ GPIO_IDR,0x10
+  16              	.equ GPIO_ODR,0x14
+  17              	.equ GPIO_BSRR,0x18
+  18              	.equ GPIO_LCKR,0x1c
+  19              	.equ GPIO_AFRL,0x20
+  20              	.equ GPIO_AFRH,0x24
+   6              	
+   7              	  SET_TARGET
+   8              	
+   9              	  .text
+  10              	
+  11              	  // GPIOC function definition
+  12              	  FUNCTION gpio_c_init,global
+  13              	
+  14              	    // Pushing lr onto the stack
+  15 0000 00B5     	    push {lr}
+  16              	
+  17              	    // Set r0 to 2 as we want to enable the clock for port C
+  18 0002 4FF00200 	    mov r0,#2
+  19 0006 FFF7FEFF 	    bl  rcc_gpio_enable
+  20              	
+  21              	    // Set r3 to GPIO C base address
+  22 000a 054B     	    ldr r3,=#GPIOC_BASE
+  23              	
+  24              	    // Initialize all the pins to input using the right offsets
+  25 000c 054A     	    ldr r2,=#0x00000000
+  26 000e DA60     	    str r2,[r3,#GPIO_PUPDR]
+  27 0010 1A60     	    str r2,[r3,#GPIO_MODER]
+  28 0012 5A60     	    str r2,[r3,#GPIO_OTYPER]
+  29              	
+  30 0014 044A     	    ldr r2,=#0xffffffff
+  31 0016 9A60     	    str r2,[r3,#GPIO_OSPEEDR]
+  32              	
+  33              	    // Pop lr off the stack
+  34 0018 5DF804EB 	    pop {lr}
+  35              	
+  36 001c 7047     	    bx lr
+  37              	  
+  38 001e 00000008 	  ENDFUNC gpio_c_init
+  38      02400000 
+  38      0000FFFF 
+  38      FFFF
+  39              	
+  40              	  // Define our get function
+  41              	  FUNCTION gpio_c_get,global
+  42              	
+  43              	    // Load GPIOC base address in r3
+  44 002c 014B     	    ldr r3,=#GPIOC_BASE
+  45              	
+  46              	    // Load the input pins into r0
+  47 002e 1869     	    ldr r0,[r3,#GPIO_IDR]
+  48              	
+  49              	    // Branch and exchange out of subroutine 
+  50 0030 7047     	    bx  lr
+  51              	
+  52              	  // End of function definition
+  53 0032 00000008 	  ENDFUNC gpio_c_get
+  53      0240
+  54              	
+  55              	  .end
+DEFINED SYMBOLS
+                            *ABS*:00000001 ctxm4
+ ./src/gpio_regs.inc:4      *ABS*:40020000 GPIOA_BASE
+ ./src/gpio_regs.inc:5      *ABS*:40020400 GPIOB_BASE
+ ./src/gpio_regs.inc:6      *ABS*:40020800 GPIOC_BASE
+ ./src/gpio_regs.inc:7      *ABS*:40020c00 GPIOD_BASE
+ ./src/gpio_regs.inc:8      *ABS*:40021000 GPIOE_BASE
+ ./src/gpio_regs.inc:11     *ABS*:00000000 GPIO_MODER
+ ./src/gpio_regs.inc:12     *ABS*:00000004 GPIO_OTYPER
+ ./src/gpio_regs.inc:13     *ABS*:00000008 GPIO_OSPEEDR
+ ./src/gpio_regs.inc:14     *ABS*:0000000c GPIO_PUPDR
+ ./src/gpio_regs.inc:15     *ABS*:00000010 GPIO_IDR
+ ./src/gpio_regs.inc:16     *ABS*:00000014 GPIO_ODR
+ ./src/gpio_regs.inc:17     *ABS*:00000018 GPIO_BSRR
+ ./src/gpio_regs.inc:18     *ABS*:0000001c GPIO_LCKR
+ ./src/gpio_regs.inc:19     *ABS*:00000020 GPIO_AFRL
+ ./src/gpio_regs.inc:20     *ABS*:00000024 GPIO_AFRH
+        src/gpio_c.s:12     .text:00000000 gpio_c_init
+        src/gpio_c.s:12     .text:00000000 $t
+        src/gpio_c.s:38     .text:0000001e $d
+        src/gpio_c.s:41     .text:0000002c gpio_c_get
+        src/gpio_c.s:41     .text:0000002c $t
+        src/gpio_c.s:53     .text:00000032 $d
+                   .debug_aranges:0000000c $d
+
+UNDEFINED SYMBOLS
+rcc_gpio_enable
